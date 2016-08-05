@@ -482,7 +482,8 @@ export default class MasterPlaylistController extends videojs.EventTarget {
       // seek to the latest media position for live videos
       seekable = this.seekable();
       if (seekable.length) {
-        this.tech_.setCurrentTime(seekable.end(0));
+        let startTime = seekable.end(0) - (this.hls_.options().bufferLength || 0);
+        this.tech_.setCurrentTime(startTime > 0 ? startTime : 0);
       }
 
       return true;
