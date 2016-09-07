@@ -490,13 +490,14 @@ const PlaylistLoader = function(srcUrl, hls, withCredentials) {
         }
 
         // resolve any media group URIs
-        for (let groupKey in loader.master.mediaGroups.AUDIO) {
-          for (let labelKey in loader.master.mediaGroups.AUDIO[groupKey]) {
-            let alternateAudio = loader.master.mediaGroups.AUDIO[groupKey][labelKey];
+        for (let groupType in loader.master.mediaGroups) {
+          for (let groupKey in loader.master.mediaGroups[groupType]) {
+            for (let labelKey in loader.master.mediaGroups[groupType][groupKey]) {
+              let mediaGroup = loader.master.mediaGroups[groupType][groupKey][labelKey];
 
-            if (alternateAudio.uri) {
-              alternateAudio.resolvedUri =
-                resolveUrl(loader.master.uri, alternateAudio.uri);
+              if (mediaGroup.uri) {
+                mediaGroup.resolvedUri = resolveUrl(loader.master.uri, mediaGroup.uri);
+              }
             }
           }
         }
