@@ -6,6 +6,7 @@ import SegmentLoader from './segment-loader';
 import Ranges from './ranges';
 import videojs from 'video.js';
 import HlsAudioTrack from './hls-audio-track';
+import HlsTextTrack from './hls-text-track';
 import AdCueTags from './ad-cue-tags';
 
 // 5 minute blacklist
@@ -69,6 +70,7 @@ export default class MasterPlaylistController extends videojs.EventTarget {
     }
 
     this.audioTracks_ = [];
+    this.textTracks_ = [];
     this.requestOptions_ = {
       withCredentials: this.withCredentials,
       timeout: null
@@ -94,6 +96,8 @@ export default class MasterPlaylistController extends videojs.EventTarget {
     this.mainSegmentLoader_ = new SegmentLoader(segmentLoaderOptions);
     // alternate audio track
     this.audioSegmentLoader_ = new SegmentLoader(segmentLoaderOptions);
+    // subtitles track
+    this.webvttSegmentLoader_ = new SegmentLoader(segmentLoaderOptions);
 
     if (!url) {
       throw new Error('A non-empty playlist URL is required');
@@ -118,6 +122,7 @@ export default class MasterPlaylistController extends videojs.EventTarget {
       this.setupSourceBuffer_();
       this.setupFirstPlay();
       this.useAudio();
+      this.useSubtitles();
     });
 
     this.masterPlaylistLoader_.on('loadedplaylist', () => {
@@ -129,6 +134,7 @@ export default class MasterPlaylistController extends videojs.EventTarget {
         this.initialMedia_ = this.selectPlaylist();
         this.masterPlaylistLoader_.media(this.initialMedia_);
         this.fillAudioTracks_();
+        this.fillTextTracks_();
 
         this.trigger('selectedinitialmedia');
         return;
@@ -209,6 +215,12 @@ export default class MasterPlaylistController extends videojs.EventTarget {
       this.useAudio();
     });
 
+    this.webvttSegmentLoader_.on('error', () => {
+      videojs.log.warn('Problem encountered with the current subtitle track.');
+      this.webvttSegmentLoader_.abort();
+      this.webvttPlaylistLoader_ = null;
+    });
+
     this.masterPlaylistLoader_.load();
   }
 
@@ -219,7 +231,8 @@ export default class MasterPlaylistController extends videojs.EventTarget {
    * @private
    */
   mediaRequests_() {
-    return this.audioSegmentLoader_.mediaRequests +
+    return this.webvttSegmentLoader_.mediaRequests +
+           this.audioSegmentLoader_.mediaRequests +
            this.mainSegmentLoader_.mediaRequests;
   }
 
@@ -230,7 +243,8 @@ export default class MasterPlaylistController extends videojs.EventTarget {
    * @private
    */
   mediaTransferDuration_() {
-    return this.audioSegmentLoader_.mediaTransferDuration +
+    return this.webvttSegmentLoader_.mediaTransferDuration +
+           this.audioSegmentLoader_.mediaTransferDuration +
            this.mainSegmentLoader_.mediaTransferDuration;
 
   }
@@ -242,7 +256,8 @@ export default class MasterPlaylistController extends videojs.EventTarget {
    * @private
    */
   mediaBytesTransferred_() {
-    return this.audioSegmentLoader_.mediaBytesTransferred +
+    return this.webvttSegmentLoader_.mediaBytesTransferred +
+           this.audioSegmentLoader_.mediaBytesTransferred +
            this.mainSegmentLoader_.mediaBytesTransferred;
   }
 
@@ -295,12 +310,53 @@ export default class MasterPlaylistController extends videojs.EventTarget {
   }
 
   /**
+   * fill our internal list of HlsTextTracks with data from
+   * the master playlist or use a default
+   *
+   * @private
+   */
+  fillTextTracks_() {
+    let master = this.master();
+    let mediaGroups = master.mediaGroups || {};
+
+    let tracks = {};
+
+    for (let mediaGroup in mediaGroups.SUBTITLES) {
+      for (let label in mediaGroups.SUBTITLES[mediaGroup]) {
+        let properties = mediaGroups.SUBTITLES[mediaGroup][label];
+
+        // if the track already exists add a new "location"
+        // since tracks in different mediaGroups are actually the same
+        // track with different locations to download them from
+        if (tracks[label]) {
+          tracks[label].addLoader(mediaGroup, properties.resolvedUri);
+          continue;
+        }
+
+        let track = new HlsTextTrack(videojs.mergeOptions(properties, {
+          hls: this.hls_,
+          tech: this.tech_,
+          withCredentials: this.withCredential,
+          mediaGroup,
+          label,
+        }));
+
+        tracks[label] = track;
+        this.textTracks_.push(track);
+      }
+    }
+  }
+
+  /**
    * Call load on our SegmentLoaders
    */
   load() {
     this.mainSegmentLoader_.load();
     if (this.audioPlaylistLoader_) {
       this.audioSegmentLoader_.load();
+    }
+    if (this.webvttPlaylistLoader_) {
+      this.webvttSegmentLoader_.load();
     }
   }
 
@@ -412,6 +468,96 @@ export default class MasterPlaylistController extends videojs.EventTarget {
 
     this.audioSegmentLoader_.clearBuffer();
     this.audioPlaylistLoader_.start();
+  }
+
+  /**
+   * Use the webvtt subtitle track
+   */
+  useSubtitles() {
+    let track;
+
+    this.textTracks_.forEach((t) => {
+      if (!track && t.enabled) {
+        track = t;
+      }
+    });
+
+    // called too early or no track is enabled
+    if (!track) {
+      return;
+    }
+
+    // Pause any existing track loader
+    if (this.webvttPlaylistLoader_) {
+      this.webvttPlaylistLoader_.pause();
+      this.webvttPlaylistLoader_ = null;
+      this.webvttSegmentLoader_.pause();
+    }
+
+    let media = this.masterPlaylistLoader_.media();
+    let mediaGroup = media.attributes.SUBTITLES;
+
+    // If the subtitle track for the active audio group has
+    // a playlist loader than it is an alterative audio track
+    // otherwise it is a part of the mainSegmenLoader
+    let loader = track.getLoader(mediaGroup);
+
+    // TODO: it may be better to create the playlist loader here
+    // when we can change an webvttPlaylistLoaders src
+    this.webvttPlaylistLoader_ = loader;
+
+    if (this.webvttPlaylistLoader_.started) {
+      this.webvttPlaylistLoader_.load();
+      this.webvttSegmentLoader_.load();
+      this.webvttSegmentLoader_.clearBuffer();
+      return;
+    }
+
+    this.webvttPlaylistLoader_.on('loadedmetadata', () => {
+      /* eslint-disable no-shadow */
+      let media = this.webvttPlaylistLoader_.media();
+      /* eslint-enable no-shadow */
+
+      this.webvttSegmentLoader_.playlist(media, this.requestOptions_);
+
+      // if the video is already playing, or if this isn't a live video and preload
+      // permits, start downloading segments
+      if (!this.tech_.paused() ||
+          (media.endList && this.tech_.preload() !== 'none')) {
+        this.webvttSegmentLoader_.load();
+      }
+
+      if (!media.endList) {
+        // trigger the playlist loader to start "expired time"-tracking
+        this.webvttPlaylistLoader_.trigger('firstplay');
+      }
+    });
+
+    this.webvttPlaylistLoader_.on('loadedplaylist', () => {
+      let updatedPlaylist;
+
+      if (this.webvttPlaylistLoader_) {
+        updatedPlaylist = this.webvttPlaylistLoader_.media();
+      }
+
+      if (!updatedPlaylist) {
+        // only one playlist to select
+        this.webvttPlaylistLoader_.media(
+          this.webvttPlaylistLoader_.playlists.master.playlists[0]);
+        return;
+      }
+
+      this.webvttSegmentLoader_.playlist(updatedPlaylist, this.requestOptions_);
+    });
+
+    this.webvttPlaylistLoader_.on('error', () => {
+      videojs.log.warn('Problem encountered with the current subtitle track.');
+      this.webvttSegmentLoader_.abort();
+      this.webvttPlaylistLoader_ = null;
+    });
+
+    this.webvttSegmentLoader_.clearBuffer();
+    this.webvttPlaylistLoader_.start();
   }
 
   /**
@@ -566,6 +712,9 @@ export default class MasterPlaylistController extends videojs.EventTarget {
     if (this.audioPlaylistLoader_) {
       this.audioSegmentLoader_.pause();
     }
+    if (this.webvttPlaylistLoader_) {
+      this.webvttSegmentLoader_.pause();
+    }
   }
 
   /**
@@ -600,11 +749,17 @@ export default class MasterPlaylistController extends videojs.EventTarget {
     if (this.audioPlaylistLoader_) {
       this.audioSegmentLoader_.abort();
     }
+    if (this.webvttPlaylistLoader_) {
+      this.webvttSegmentLoader_.abort();
+    }
 
     if (!this.tech_.paused()) {
       this.mainSegmentLoader_.load();
       if (this.audioPlaylistLoader_) {
         this.audioSegmentLoader_.load();
+      }
+      if (this.webvttPlaylistLoader_) {
+        this.webvttSegmentLoader_.load();
       }
     }
   }
@@ -707,12 +862,13 @@ export default class MasterPlaylistController extends videojs.EventTarget {
    */
   dispose() {
     this.masterPlaylistLoader_.dispose();
-    this.audioTracks_.forEach((track) => {
-      track.dispose();
-    });
+    this.audioTracks_.forEach((track) => track.dispose());
     this.audioTracks_.length = 0;
+    this.textTracks_.forEach((track) => track.dispose());
+    this.textTracks_.length = 0;
     this.mainSegmentLoader_.dispose();
     this.audioSegmentLoader_.dispose();
+    this.webvttSegmentLoader_.dispose();
   }
 
   /**
