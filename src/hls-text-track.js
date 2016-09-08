@@ -6,80 +6,6 @@ import window from 'global/window';
 import PlaylistLoader from './playlist-loader';
 
 /**
- * takes a webvtt file contents and parses it into cues
- *
- * @param {String} srcContent webVTT file contents
- * @param {Track} track track to addcues to
- */
-const parseCues = function(srcContent, track) {
-  const parser = new window.WebVTT.Parser(window, window.vttjs, window.WebVTT.StringDecoder());
-  const errors = [];
-
-  parser.oncue = function(cue) {
-    // Double check we don't already have this cue before we add it
-    //(WebVTT streams are mandated to include cues in both segments should the cue span
-    // a segment boundary)
-    const cues = track.cues;
-    let i = cues.length;
-
-    // Start from the back so that if it's recently been added we can exit early
-    while (i-- > 0) {
-      // If the content and timing is the same, it's the same:
-      let otherCue = cues[i];
-      if (otherCue.startTime === cue.startTime
-       && otherCue.endTime === cue.endTime
-       && otherCue.text === cue.text) { return; }
-    }
-
-    track.addCue(cue);
-  };
-
-  parser.onparsingerror = function(error) {
-    errors.push(error);
-  };
-
-  parser.onflush = function() {
-    track.trigger({
-      type: 'loadeddata',
-      target: track
-    });
-  };
-
-  parser.parse(srcContent);
-  if (errors.length > 0 && window.console) {
-    if (window.console.groupCollapsed) {
-      window.console.groupCollapsed(`Text Track parsing errors for ${track.src}`);
-    }
-    errors.forEach((error) => console.error(error));
-    if (window.console.groupEnd) {
-      window.console.groupEnd();
-    }
-  }
-
-  parser.flush();
-};
-
-/**
- * load a track from a  specifed url
- *
- * @param {String} src url to load track from
- * @param {Track} track track to addcues to
- */
-const loadTrack = function(src, track) {
-  const opts = {
-    uri: src,
-  }
-
-  xhr(opts, Fn.bind(this, function(err, response, responseBody) {
-    if (err && window.console) {
-      return console.error(err, response);
-    }
-
-    parseCues(responseBody, track);
-  }));
-};
-
-/**
  * HlsTextTrack extends video.js text tracks but adds HLS
  * specific data storage such as playlist loaders, mediaGroups
  * and default/autoselect
@@ -98,6 +24,7 @@ export default class HlsTextTrack extends TextTrack {
       tech: options.tech,
     });
 
+    this.uri = options.resolvedUri;
     this.hls = options.hls;
     this.autoselect = options.autoselect || false;
     this.default = options.default || false;
@@ -170,4 +97,80 @@ export default class HlsTextTrack extends TextTrack {
       this.removeLoader(this.mediaGroups_[i].mediaGroup);
     }
   }
+
+  /**
+   * takes a webvtt file contents and parses it into cues
+   *
+   * @param {String} srcContent webVTT file contents
+   *
+   * @private
+   */
+  parseCues_(srcContent) {
+    const parser = new window.WebVTT.Parser(window, window.vttjs, window.WebVTT.StringDecoder());
+    const errors = [];
+
+    parser.oncue = (cue) => {
+      // Double check we don't already have this cue before we add it
+      //(WebVTT streams are mandated to include cues in both segments should the cue span
+      // a segment boundary)
+      const cues = this.cues_;
+      let i = cues.length;
+
+      // Start from the back so that if it's recently been added we can exit early
+      while (i-- > 0) {
+        // If the content and timing is the same, it's the same:
+        let otherCue = cues[i];
+        if (otherCue.startTime === cue.startTime
+         && otherCue.endTime === cue.endTime
+         && otherCue.text === cue.text) { return; }
+      }
+
+      this.addCue(cue);
+    };
+
+    parser.onparsingerror = (error) => errors.push(error);
+
+    parser.onflush = () => {
+      this.trigger({
+        type: 'loadeddata',
+        target: this
+      });
+    };
+
+    parser.parse(srcContent);
+    if (errors.length > 0 && window.console) {
+      if (window.console.groupCollapsed) {
+        window.console.groupCollapsed(`Text Track parsing errors for ${this.uri}`);
+      }
+      errors.forEach((error) => console.error(error));
+      if (window.console.groupEnd) {
+        window.console.groupEnd();
+      }
+    }
+
+    parser.flush();
+  };
+
+  /**
+   * load a track from a specifed url
+   *
+   * @param {String} src url to load track from
+   *
+   * @private
+   */
+  loadTrack_(src) {
+    const opts = {
+      uri: src,
+    }
+
+    xhr(opts, (err, response, responseBody) => {
+      if (err) {
+        return window.console && console.error(err, response);
+      }
+
+      this.parseCues(responseBody);
+    });
+  };
+
+
 }
