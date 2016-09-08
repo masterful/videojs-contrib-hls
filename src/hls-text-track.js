@@ -4,6 +4,7 @@
 import {TextTrack, xhr} from 'video.js';
 import window from 'global/window';
 import PlaylistLoader from './playlist-loader';
+import TextDecoder from 'text-encoding';
 
 /**
  * HlsTextTrack extends video.js text tracks but adds HLS
@@ -31,6 +32,7 @@ export default class HlsTextTrack extends TextTrack {
     this.withCredentials = options.withCredentials || false;
     this.mediaGroups_ = [];
     this.addLoader(options.mediaGroup, options.resolvedUri);
+    this.decoder_ = new TextDecoder('utf-8');
   }
 
   /**
@@ -137,7 +139,7 @@ export default class HlsTextTrack extends TextTrack {
       });
     };
 
-    parser.parse(srcContent);
+    parser.parse(this.decoder_.decode(srcContent));
     if (errors.length > 0 && window.console) {
       if (window.console.groupCollapsed) {
         window.console.groupCollapsed(`Text Track parsing errors for ${this.uri}`);
@@ -150,27 +152,4 @@ export default class HlsTextTrack extends TextTrack {
 
     parser.flush();
   };
-
-  /**
-   * load a track from a specifed url
-   *
-   * @param {String} src url to load track from
-   *
-   * @private
-   */
-  loadTrack_(src) {
-    const opts = {
-      uri: src,
-    }
-
-    xhr(opts, (err, response, responseBody) => {
-      if (err) {
-        return window.console && console.error(err, response);
-      }
-
-      this.parseCues(responseBody);
-    });
-  };
-
-
 }

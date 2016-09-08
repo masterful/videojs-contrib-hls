@@ -8,6 +8,7 @@ import videojs from 'video.js';
 import HlsAudioTrack from './hls-audio-track';
 import HlsTextTrack from './hls-text-track';
 import AdCueTags from './ad-cue-tags';
+import FakeSourceUpdater from './fake-source-updater';
 
 // 5 minute blacklist
 const BLACKLIST_DURATION = 5 * 60 * 1000;
@@ -522,14 +523,8 @@ track = track || this.textTracks_[0];
       /* eslint-enable no-shadow */
 
       this.webvttSegmentLoader_.playlist(media, this.requestOptions_);
-      this.webvttSegmentLoader_.mimeType('D_WEBVTT/SUBTITLES');
-
-      // if the video is already playing, or if this isn't a live video and preload
-      // permits, start downloading segments
-      if (!this.tech_.paused() ||
-          (media.endList && this.tech_.preload() !== 'none')) {
-        this.webvttSegmentLoader_.load();
-      }
+      this.webvttSegmentLoader_.sourceUpdater_ = new FakeSourceUpdater();
+      this.webvttSegmentLoader_.load();
 
       if (!media.endList) {
         // trigger the playlist loader to start "expired time"-tracking
