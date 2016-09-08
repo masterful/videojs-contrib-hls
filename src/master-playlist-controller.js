@@ -478,7 +478,7 @@ export default class MasterPlaylistController extends videojs.EventTarget {
     let track;
 
     this.textTracks_.forEach((t) => {
-      if (!track && t.enabled) {
+      if (!track && t.mode === 'showing') {
         track = t;
       }
     });
@@ -523,7 +523,7 @@ track = track || this.textTracks_[0];
       /* eslint-enable no-shadow */
 
       this.webvttSegmentLoader_.playlist(media, this.requestOptions_);
-      this.webvttSegmentLoader_.sourceUpdater_ = new FakeSourceUpdater();
+      this.webvttSegmentLoader_.sourceUpdater_ = new FakeSourceUpdater(track);
       this.webvttSegmentLoader_.load();
 
       if (!media.endList) {
