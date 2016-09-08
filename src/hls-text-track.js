@@ -4,7 +4,7 @@
 import {TextTrack, xhr} from 'video.js';
 import window from 'global/window';
 import PlaylistLoader from './playlist-loader';
-import TextDecoder from 'text-encoding';
+import {TextDecoder} from 'text-encoding';
 
 /**
  * HlsTextTrack extends video.js text tracks but adds HLS
