@@ -718,9 +718,6 @@ export class MasterPlaylistController extends videojs.EventTarget {
       }
     });
 
-// FORCE FIRST
-track = track || this.textTracks_[0];
-
     // called too early or no track is enabled
     if (!track) {
       return;
