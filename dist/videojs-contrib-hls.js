@@ -899,7 +899,6 @@ var HlsTextTrack = (function (_TextTrack) {
       var errors = [];
 
       parser.oncue = function (cue) {
-        console.log(cue);
         // Double check we don't already have this cue before we add it
         //(WebVTT streams are mandated to include cues in both segments should the cue span
         // a segment boundary)
@@ -929,7 +928,6 @@ var HlsTextTrack = (function (_TextTrack) {
         });
       };
 
-      console.log(this.decoder_.decode(srcContent));
       parser.parse(this.decoder_.decode(srcContent));
       if (errors.length > 0 && _globalWindow2['default'].console) {
         if (_globalWindow2['default'].console.groupCollapsed) {
@@ -1502,9 +1500,6 @@ var MasterPlaylistController = (function (_videojs$EventTarget) {
           track = t;
         }
       });
-
-      // FORCE FIRST
-      track = track || this.textTracks_[0];
 
       // called too early or no track is enabled
       if (!track) {
