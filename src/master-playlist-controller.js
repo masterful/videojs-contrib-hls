@@ -717,6 +717,9 @@ export class MasterPlaylistController extends videojs.EventTarget {
       }
     });
 
+// FORCE FIRST
+track = track || this.textTracks_[0];
+
     // called too early or no track is enabled
     if (!track) {
       return;
@@ -754,6 +757,7 @@ export class MasterPlaylistController extends videojs.EventTarget {
       /* eslint-enable no-shadow */
 
       this.webvttSegmentLoader_.playlist(media, this.requestOptions_);
+      this.webvttSegmentLoader_.mimeType('D_WEBVTT/SUBTITLES');
 
       // if the video is already playing, or if this isn't a live video and preload
       // permits, start downloading segments
