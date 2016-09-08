@@ -12,10 +12,10 @@
  * SourceBuffer
  */
 export default class FakeSourceUpdater {
-  constructor(mediaSource) {
+  constructor(track) {
     this.timestampOffset_ = 0;
     this.buffered_ = [];
-    this.mediaSource = mediaSource;
+    this.track_ = track;
   }
 
   /**
@@ -36,6 +36,7 @@ export default class FakeSourceUpdater {
    * @see http://www.w3.org/TR/media-source/#widl-SourceBuffer-appendBuffer-void-ArrayBuffer-data
    */
   appendBuffer(bytes, done) {
+    this.track_.parseCues_(bytes);
     done();
   }
 

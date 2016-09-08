@@ -218,12 +218,12 @@ var _createClass = (function () { function defineProperties(target, props) { for
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 var FakeSourceUpdater = (function () {
-  function FakeSourceUpdater(mediaSource) {
+  function FakeSourceUpdater(track) {
     _classCallCheck(this, FakeSourceUpdater);
 
     this.timestampOffset_ = 0;
     this.buffered_ = [];
-    this.mediaSource = mediaSource;
+    this.track_ = track;
   }
 
   /**
@@ -249,6 +249,7 @@ var FakeSourceUpdater = (function () {
   }, {
     key: 'appendBuffer',
     value: function appendBuffer(bytes, done) {
+      this.track_.parseCues_(bytes);
       done();
     }
 
@@ -898,6 +899,7 @@ var HlsTextTrack = (function (_TextTrack) {
       var errors = [];
 
       parser.oncue = function (cue) {
+        console.log(cue);
         // Double check we don't already have this cue before we add it
         //(WebVTT streams are mandated to include cues in both segments should the cue span
         // a segment boundary)
@@ -927,6 +929,7 @@ var HlsTextTrack = (function (_TextTrack) {
         });
       };
 
+      console.log(this.decoder_.decode(srcContent));
       parser.parse(this.decoder_.decode(srcContent));
       if (errors.length > 0 && _globalWindow2['default'].console) {
         if (_globalWindow2['default'].console.groupCollapsed) {
@@ -1495,7 +1498,7 @@ var MasterPlaylistController = (function (_videojs$EventTarget) {
       var track = undefined;
 
       this.textTracks_.forEach(function (t) {
-        if (!track && t.enabled) {
+        if (!track && t.mode === 'showing') {
           track = t;
         }
       });
@@ -1540,7 +1543,7 @@ var MasterPlaylistController = (function (_videojs$EventTarget) {
         /* eslint-enable no-shadow */
 
         _this3.webvttSegmentLoader_.playlist(media, _this3.requestOptions_);
-        _this3.webvttSegmentLoader_.sourceUpdater_ = new _fakeSourceUpdater2['default']();
+        _this3.webvttSegmentLoader_.sourceUpdater_ = new _fakeSourceUpdater2['default'](track);
         _this3.webvttSegmentLoader_.load();
 
         if (!media.endList) {
