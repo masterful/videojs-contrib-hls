@@ -112,7 +112,6 @@ export default class HlsTextTrack extends TextTrack {
     const errors = [];
 
     parser.oncue = (cue) => {
-console.log(cue);
       // Double check we don't already have this cue before we add it
       //(WebVTT streams are mandated to include cues in both segments should the cue span
       // a segment boundary)
@@ -140,7 +139,6 @@ console.log(cue);
       });
     };
 
-console.log(this.decoder_.decode(srcContent));
     parser.parse(this.decoder_.decode(srcContent));
     if (errors.length > 0 && window.console) {
       if (window.console.groupCollapsed) {
