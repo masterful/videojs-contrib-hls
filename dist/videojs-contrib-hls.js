@@ -194,138 +194,6 @@ exports["default"] = {
 };
 module.exports = exports["default"];
 },{}],4:[function(require,module,exports){
-/**
- * @file fake-source-updater.js
- */
-
-/**
- * Fake the source updater
- *
- * @class SourceUpdater
- * @param {MediaSource} mediaSource the MediaSource to create the
- * SourceBuffer from
- * @param {String} mimeType the desired MIME type of the underlying
- * SourceBuffer
- */
-'use strict';
-
-Object.defineProperty(exports, '__esModule', {
-  value: true
-});
-
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
-
-var FakeSourceUpdater = (function () {
-  function FakeSourceUpdater(track) {
-    _classCallCheck(this, FakeSourceUpdater);
-
-    this.timestampOffset_ = 0;
-    this.buffered_ = [];
-    this.track_ = track;
-  }
-
-  /**
-   * Aborts the current segment and resets the segment parser.
-   *
-   * @param {Function} done function to call when done
-   * @see http://w3c.github.io/media-source/#widl-SourceBuffer-abort-void
-   */
-
-  _createClass(FakeSourceUpdater, [{
-    key: 'abort',
-    value: function abort(done) {
-      done();
-    }
-
-    /**
-     * Queue an update to append an ArrayBuffer.
-     *
-     * @param {ArrayBuffer} bytes
-     * @param {Function} done the function to call when done
-     * @see http://www.w3.org/TR/media-source/#widl-SourceBuffer-appendBuffer-void-ArrayBuffer-data
-     */
-  }, {
-    key: 'appendBuffer',
-    value: function appendBuffer(bytes, done) {
-      this.track_.parseCues_(bytes);
-      done();
-    }
-
-    /**
-     * Indicates what TimeRanges are buffered in the managed SourceBuffer.
-     *
-     * @see http://www.w3.org/TR/media-source/#widl-SourceBuffer-buffered
-     */
-  }, {
-    key: 'buffered',
-    value: function buffered() {
-      return videojs.createTimeRanges(this.buffered_);
-    }
-
-    /**
-     * Queue an update to set the duration.
-     *
-     * @param {Double} duration what to set the duration to
-     * @see http://www.w3.org/TR/media-source/#widl-MediaSource-duration
-     */
-  }, {
-    key: 'duration',
-    value: function duration(_duration) {
-      this.duration = _duration;
-    }
-
-    /**
-     * Queue an update to remove a time range from the buffer.
-     *
-     * @param {Number} start where to start the removal
-     * @param {Number} end where to end the removal
-     * @see http://www.w3.org/TR/media-source/#widl-SourceBuffer-remove-void-double-start-unrestricted-double-end
-     */
-  }, {
-    key: 'remove',
-    value: function remove(start, end) {}
-
-    /**
-     * wether the underlying sourceBuffer is updating or not
-     *
-     * @return {Boolean} the updating status of the SourceBuffer
-     */
-  }, {
-    key: 'updating',
-    value: function updating() {
-      return false;
-    }
-
-    /**
-     * Set/get the timestampoffset on the SourceBuffer
-     *
-     * @return {Number} the timestamp offset
-     */
-  }, {
-    key: 'timestampOffset',
-    value: function timestampOffset(offset) {
-      if (typeof offset !== 'undefined') {
-        this.timestampOffset_ = offset;
-      }
-      return this.timestampOffset_;
-    }
-
-    /**
-     * dispose of the source updater and the underlying sourceBuffer
-     */
-  }, {
-    key: 'dispose',
-    value: function dispose() {}
-  }]);
-
-  return FakeSourceUpdater;
-})();
-
-exports['default'] = FakeSourceUpdater;
-module.exports = exports['default'];
-},{}],5:[function(require,module,exports){
 (function (global){
 /**
  * @file gap-skipper.js
@@ -598,7 +466,7 @@ var GapSkipper = (function () {
 exports['default'] = GapSkipper;
 module.exports = exports['default'];
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./ranges":11}],6:[function(require,module,exports){
+},{"./ranges":10}],5:[function(require,module,exports){
 (function (global){
 /**
  * @file hls-audio-track.js
@@ -740,7 +608,7 @@ var HlsAudioTrack = (function (_AudioTrack) {
 exports['default'] = HlsAudioTrack;
 module.exports = exports['default'];
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./playlist-loader":9}],7:[function(require,module,exports){
+},{"./playlist-loader":8}],6:[function(require,module,exports){
 (function (global){
 /**
  * @file hls-text-track.js
@@ -951,7 +819,7 @@ var HlsTextTrack = (function (_TextTrack) {
 exports['default'] = HlsTextTrack;
 module.exports = exports['default'];
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./playlist-loader":9,"global/window":25,"text-encoding":86}],8:[function(require,module,exports){
+},{"./playlist-loader":8,"global/window":25,"text-encoding":86}],7:[function(require,module,exports){
 (function (global){
 /**
  * @file master-playlist-controller.js
@@ -1000,9 +868,9 @@ var _adCueTags = require('./ad-cue-tags');
 
 var _adCueTags2 = _interopRequireDefault(_adCueTags);
 
-var _fakeSourceUpdater = require('./fake-source-updater');
+var _trackSourceUpdater = require('./track-source-updater');
 
-var _fakeSourceUpdater2 = _interopRequireDefault(_fakeSourceUpdater);
+var _trackSourceUpdater2 = _interopRequireDefault(_trackSourceUpdater);
 
 // 5 minute blacklist
 var BLACKLIST_DURATION = 5 * 60 * 1000;
@@ -1538,7 +1406,7 @@ var MasterPlaylistController = (function (_videojs$EventTarget) {
         /* eslint-enable no-shadow */
 
         _this3.webvttSegmentLoader_.playlist(media, _this3.requestOptions_);
-        _this3.webvttSegmentLoader_.sourceUpdater_ = new _fakeSourceUpdater2['default'](track);
+        _this3.webvttSegmentLoader_.sourceUpdater_ = new _trackSourceUpdater2['default'](track);
         _this3.webvttSegmentLoader_.load();
 
         if (!media.endList) {
@@ -2045,7 +1913,7 @@ var MasterPlaylistController = (function (_videojs$EventTarget) {
 exports['default'] = MasterPlaylistController;
 module.exports = exports['default'];
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./ad-cue-tags":1,"./fake-source-updater":4,"./hls-audio-track":6,"./hls-text-track":7,"./playlist-loader":9,"./ranges":11,"./segment-loader":14}],9:[function(require,module,exports){
+},{"./ad-cue-tags":1,"./hls-audio-track":5,"./hls-text-track":6,"./playlist-loader":8,"./ranges":10,"./segment-loader":13,"./track-source-updater":16}],8:[function(require,module,exports){
 (function (global){
 /**
  * @file playlist-loader.js
@@ -2658,7 +2526,7 @@ PlaylistLoader.prototype.updateMediaPlaylist_ = function (update) {
 exports['default'] = PlaylistLoader;
 module.exports = exports['default'];
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./resolve-url":13,"./stream":16,"global/window":25,"m3u8-parser":62}],10:[function(require,module,exports){
+},{"./resolve-url":12,"./stream":15,"global/window":25,"m3u8-parser":62}],9:[function(require,module,exports){
 (function (global){
 /**
  * @file playlist.js
@@ -3035,7 +2903,7 @@ Playlist.getMediaIndexForTime_ = getMediaIndexForTime_;
 // exports
 exports['default'] = Playlist;
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"global/window":25}],11:[function(require,module,exports){
+},{"global/window":25}],10:[function(require,module,exports){
 (function (global){
 /**
  * ranges
@@ -3366,7 +3234,7 @@ exports['default'] = {
 };
 module.exports = exports['default'];
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],12:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 /**
  * Enable/disable playlist function. It is intended to have the first two
  * arguments partially-applied in order to create the final per-playlist
@@ -3468,7 +3336,7 @@ var renditionSelectionMixin = function renditionSelectionMixin(hlsHandler) {
 
 exports['default'] = renditionSelectionMixin;
 module.exports = exports['default'];
-},{}],13:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 /**
  * @file resolve-url.js
  */
@@ -3525,7 +3393,7 @@ var resolveUrl = function resolveUrl(basePath, path) {
 
 exports['default'] = resolveUrl;
 module.exports = exports['default'];
-},{"global/document":24}],14:[function(require,module,exports){
+},{"global/document":24}],13:[function(require,module,exports){
 (function (global){
 /**
  * @file segment-loader.js
@@ -4485,7 +4353,7 @@ var SegmentLoader = (function (_videojs$EventTarget) {
 exports['default'] = SegmentLoader;
 module.exports = exports['default'];
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./config":3,"./playlist":10,"./ranges":11,"./source-updater":15,"aes-decrypter":21,"global/window":25}],15:[function(require,module,exports){
+},{"./config":3,"./playlist":9,"./ranges":10,"./source-updater":14,"aes-decrypter":21,"global/window":25}],14:[function(require,module,exports){
 (function (global){
 /**
  * @file source-updater.js
@@ -4714,7 +4582,7 @@ var SourceUpdater = (function () {
 exports['default'] = SourceUpdater;
 module.exports = exports['default'];
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],16:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 /**
  * @file stream.js
  */
@@ -4844,6 +4712,135 @@ var Stream = (function () {
 })();
 
 exports['default'] = Stream;
+module.exports = exports['default'];
+},{}],16:[function(require,module,exports){
+/**
+ * @file track-source-updater.js
+ */
+
+/**
+ * A source updater for tracks (since we don't use source buffers for those)
+ *
+ * @class TrackSourceUpdater
+ * @param {track} the text track object that we'll be updating
+ */
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+  value: true
+});
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+var TrackSourceUpdater = (function () {
+  function TrackSourceUpdater(track) {
+    _classCallCheck(this, TrackSourceUpdater);
+
+    this.timestampOffset_ = 0;
+    this.buffered_ = [];
+    this.track_ = track;
+  }
+
+  /**
+   * Aborts the current segment and resets the segment parser.
+   *
+   * @param {Function} done function to call when done
+   * @see http://w3c.github.io/media-source/#widl-SourceBuffer-abort-void
+   */
+
+  _createClass(TrackSourceUpdater, [{
+    key: 'abort',
+    value: function abort(done) {
+      done();
+    }
+
+    /**
+     * Queue an update to append an ArrayBuffer.
+     *
+     * @param {ArrayBuffer} bytes
+     * @param {Function} done the function to call when done
+     * @see http://www.w3.org/TR/media-source/#widl-SourceBuffer-appendBuffer-void-ArrayBuffer-data
+     */
+  }, {
+    key: 'appendBuffer',
+    value: function appendBuffer(bytes, done) {
+      this.track_.parseCues_(bytes);
+      done();
+    }
+
+    /**
+     * Indicates what TimeRanges are buffered in the managed SourceBuffer.
+     *
+     * @see http://www.w3.org/TR/media-source/#widl-SourceBuffer-buffered
+     */
+  }, {
+    key: 'buffered',
+    value: function buffered() {
+      return videojs.createTimeRanges(this.buffered_);
+    }
+
+    /**
+     * Queue an update to set the duration.
+     *
+     * @param {Double} duration what to set the duration to
+     * @see http://www.w3.org/TR/media-source/#widl-MediaSource-duration
+     */
+  }, {
+    key: 'duration',
+    value: function duration(_duration) {
+      this.duration = _duration;
+    }
+
+    /**
+     * Queue an update to remove a time range from the buffer.
+     *
+     * @param {Number} start where to start the removal
+     * @param {Number} end where to end the removal
+     * @see http://www.w3.org/TR/media-source/#widl-SourceBuffer-remove-void-double-start-unrestricted-double-end
+     */
+  }, {
+    key: 'remove',
+    value: function remove(start, end) {}
+
+    /**
+     * wether the underlying sourceBuffer is updating or not
+     *
+     * @return {Boolean} the updating status of the SourceBuffer
+     */
+  }, {
+    key: 'updating',
+    value: function updating() {
+      return false;
+    }
+
+    /**
+     * Set/get the timestampoffset on the SourceBuffer
+     *
+     * @return {Number} the timestamp offset
+     */
+  }, {
+    key: 'timestampOffset',
+    value: function timestampOffset(offset) {
+      if (typeof offset !== 'undefined') {
+        this.timestampOffset_ = offset;
+      }
+      return this.timestampOffset_;
+    }
+
+    /**
+     * dispose of the source updater and the underlying sourceBuffer
+     */
+  }, {
+    key: 'dispose',
+    value: function dispose() {}
+  }]);
+
+  return TrackSourceUpdater;
+})();
+
+exports['default'] = TrackSourceUpdater;
 module.exports = exports['default'];
 },{}],17:[function(require,module,exports){
 (function (global){
@@ -5465,8 +5462,8 @@ exports['default'] = {
 };
 module.exports = exports['default'];
 },{"./async-stream":19,"./decrypter":20}],22:[function(require,module,exports){
-arguments[4][16][0].apply(exports,arguments)
-},{"dup":16}],23:[function(require,module,exports){
+arguments[4][15][0].apply(exports,arguments)
+},{"dup":15}],23:[function(require,module,exports){
 
 },{}],24:[function(require,module,exports){
 (function (global){
@@ -7899,8 +7896,8 @@ var Parser = (function (_Stream) {
 exports['default'] = Parser;
 module.exports = exports['default'];
 },{"./line-stream":63,"./parse-stream":64,"./stream":66,"lodash-compat/object/merge":59}],66:[function(require,module,exports){
-arguments[4][16][0].apply(exports,arguments)
-},{"dup":16}],67:[function(require,module,exports){
+arguments[4][15][0].apply(exports,arguments)
+},{"dup":15}],67:[function(require,module,exports){
 /**
  * mux.js
  *
@@ -19478,5 +19475,5 @@ module.exports = {
   HlsSourceHandler: HlsSourceHandler
 };
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./bin-utils":2,"./config":3,"./gap-skipper":5,"./master-playlist-controller":8,"./playlist":10,"./playlist-loader":9,"./rendition-mixin":12,"./xhr":17,"aes-decrypter":21,"global/document":24,"global/window":25,"m3u8-parser":62,"videojs-contrib-media-sources":98}]},{},[101])(101)
+},{"./bin-utils":2,"./config":3,"./gap-skipper":4,"./master-playlist-controller":7,"./playlist":9,"./playlist-loader":8,"./rendition-mixin":11,"./xhr":17,"aes-decrypter":21,"global/document":24,"global/window":25,"m3u8-parser":62,"videojs-contrib-media-sources":98}]},{},[101])(101)
 });
