@@ -8,7 +8,7 @@ import videojs from 'video.js';
 import HlsAudioTrack from './hls-audio-track';
 import HlsTextTrack from './hls-text-track';
 import AdCueTags from './ad-cue-tags';
-import FakeSourceUpdater from './fake-source-updater';
+import TrackSourceUpdater from './track-source-updater';
 
 // 5 minute blacklist
 const BLACKLIST_DURATION = 5 * 60 * 1000;
@@ -520,7 +520,7 @@ export default class MasterPlaylistController extends videojs.EventTarget {
       /* eslint-enable no-shadow */
 
       this.webvttSegmentLoader_.playlist(media, this.requestOptions_);
-      this.webvttSegmentLoader_.sourceUpdater_ = new FakeSourceUpdater(track);
+      this.webvttSegmentLoader_.sourceUpdater_ = new TrackSourceUpdater(track);
       this.webvttSegmentLoader_.load();
 
       if (!media.endList) {
