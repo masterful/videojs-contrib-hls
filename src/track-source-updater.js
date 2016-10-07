@@ -1,17 +1,14 @@
 /**
- * @file fake-source-updater.js
+ * @file track-source-updater.js
  */
 
 /**
- * Fake the source updater
+ * A source updater for tracks (since we don't use source buffers for those)
  *
- * @class SourceUpdater
- * @param {MediaSource} mediaSource the MediaSource to create the
- * SourceBuffer from
- * @param {String} mimeType the desired MIME type of the underlying
- * SourceBuffer
+ * @class TrackSourceUpdater
+ * @param {track} the text track object that we'll be updating
  */
-export default class FakeSourceUpdater {
+export default class TrackSourceUpdater {
   constructor(track) {
     this.timestampOffset_ = 0;
     this.buffered_ = [];
