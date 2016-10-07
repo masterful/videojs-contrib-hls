@@ -43,7 +43,9 @@ export default class TrackSourceUpdater {
    * @see http://www.w3.org/TR/media-source/#widl-SourceBuffer-buffered
    */
   buffered() {
-    return videojs.createTimeRanges(this.buffered_);
+    return videojs.createTimeRanges(this.track_.cues_.map((cue) => {
+      return [cue.startTime, cue.endTime];
+    }));
   }
 
   /**

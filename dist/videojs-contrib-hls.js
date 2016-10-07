@@ -4778,7 +4778,9 @@ var TrackSourceUpdater = (function () {
   }, {
     key: 'buffered',
     value: function buffered() {
-      return videojs.createTimeRanges(this.buffered_);
+      return videojs.createTimeRanges(this.track_.cues_.map(function (cue) {
+        return [cue.startTime, cue.endTime];
+      }));
     }
 
     /**
