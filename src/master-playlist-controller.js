@@ -274,8 +274,6 @@ export class MasterPlaylistController extends videojs.EventTarget {
 
       this.fillAudioTracks_();
       this.setupAudio();
-
-      this.useAudio();
       this.useSubtitles();
 
       try {
@@ -417,13 +415,13 @@ export class MasterPlaylistController extends videojs.EventTarget {
       this.audioPlaylistLoader_ = null;
       this.setupAudio();
     });
-  }
 
-  this.webvttSegmentLoader_.on('error', () => {
-    videojs.log.warn('Problem encountered with the current subtitle track.');
-    this.webvttSegmentLoader_.abort();
-    this.webvttPlaylistLoader_ = null;
-  });
+    this.webvttSegmentLoader_.on('error', () => {
+      videojs.log.warn('Problem encountered with the current subtitle track.');
+      this.webvttSegmentLoader_.abort();
+      this.webvttPlaylistLoader_ = null;
+    });
+  }
 
   handleAudioinfoUpdate_(event) {
     if (Hls.supportsAudioInfoChange_() ||
