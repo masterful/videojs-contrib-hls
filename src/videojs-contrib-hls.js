@@ -506,11 +506,14 @@ class HlsHandler extends Component {
       });
 
       // clear current textTracks
-      this.tech_.clearTracks('text');
-      this.masterPlaylistController_.textTracks_.forEach((track) => {
-        this.tech_.textTracks().addTrack_(track);
-      });
-      this.tech_.trigger('loadedsubtitles');
+      // We still need to support the non-manifest version of captions. Only switch if we have something to switch to.
+      if (this.masterPlaylistController_.textTracks_.length > 0) {
+        this.tech_.clearTracks('text');
+        this.masterPlaylistController_.textTracks_.forEach((track) => {
+          this.tech_.textTracks().addTrack_(track);
+        });
+        this.tech_.trigger('loadedsubtitles');
+      }
     });
 
     // the bandwidth of the primary segment loader is our best
