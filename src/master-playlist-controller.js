@@ -743,7 +743,7 @@ export class MasterPlaylistController extends videojs.EventTarget {
     if (this.webvttPlaylistLoader_.started) {
       this.webvttPlaylistLoader_.load();
       this.webvttSegmentLoader_.load();
-      this.webvttSegmentLoader_.clearBuffer();
+      this.webvttSegmentLoader_.resetEverything();
       return;
     }
 
@@ -785,7 +785,7 @@ export class MasterPlaylistController extends videojs.EventTarget {
       this.webvttPlaylistLoader_ = null;
     });
 
-    this.webvttSegmentLoader_.clearBuffer();
+    this.webvttSegmentLoader_.resetEverything();
     this.webvttPlaylistLoader_.start();
   }
 
