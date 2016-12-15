@@ -339,6 +339,10 @@ class HlsHandler extends Component {
       this.masterPlaylistController_.setupAudio();
     };
 
+    this.textTrackChange_ = () => {
+      this.masterPlaylistController_.useSubtitles();
+    };
+
     this.on(this.tech_, 'play', this.play);
   }
 
@@ -486,6 +490,7 @@ class HlsHandler extends Component {
 
     this.masterPlaylistController_.on('sourceopen', () => {
       this.tech_.audioTracks().addEventListener('change', this.audioTrackChange_);
+      this.tech_.textTracks().addEventListener('change', this.textTrackChange_);
     });
 
     this.masterPlaylistController_.on('selectedinitialmedia', () => {
@@ -499,6 +504,16 @@ class HlsHandler extends Component {
       this.masterPlaylistController_.activeAudioGroup().forEach((audioTrack) => {
         this.tech_.audioTracks().addTrack(audioTrack);
       });
+
+      // clear current textTracks
+      // We still need to support the non-manifest version of captions. Only switch if we have something to switch to.
+      if (this.masterPlaylistController_.textTracks_.length > 0) {
+        this.tech_.clearTracks('text');
+        this.masterPlaylistController_.textTracks_.forEach((track) => {
+          this.tech_.textTracks().addTrack_(track);
+        });
+        this.tech_.trigger('loadedsubtitles');
+      }
     });
 
     // the bandwidth of the primary segment loader is our best
@@ -571,6 +586,7 @@ class HlsHandler extends Component {
       this.masterPlaylistController_.dispose();
     }
     this.tech_.audioTracks().removeEventListener('change', this.audioTrackChange_);
+    this.tech_.textTracks().removeEventListener('change', this.textTrackChange_);
     super.dispose();
   }
 }
