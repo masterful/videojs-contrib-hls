@@ -1,8 +1,8 @@
 {
   "name": "videojs-contrib-hls",
-  "version": "4.0.1-pv-01",
+  "version": "4.0.1-pv-02",
   "description": "Play back HLS with video.js, even where it's not natively supported",
-  "main": "dist/videojs-contrib-hls.js",
+  "main": "es5/videojs-contrib-hls.js",
   "engines": {
     "node": ">= 0.10.12"
   },
